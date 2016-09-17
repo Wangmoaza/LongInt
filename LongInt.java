@@ -10,7 +10,7 @@ public class LongInt {
 	public static final int UPPERBOUND_LEN = 9;
 	public static final Pattern EXPRESSION_PATTERN = Pattern.compile("(?<sign>[[+][-]]?)(?<num>[0-9]+)");
 	
-	private char sign;
+	private String sign; // empty string for positive sign
 	private int[] intArr;
 	private int len;
 	
@@ -21,16 +21,12 @@ public class LongInt {
 		String num_str = "";
 		if (matcher.find())
 		{
-			if (matcher.group("sign").equals("-"))
-				this.sign = '-';
-			else
-				this.sign = '+';
-			
+			this.sign = matcher.group("sign");
 			num_str = matcher.group("num");
 			this.len = num_str.length(); // set len
 		}
 		
-		// convert to int array
+		// convert to int array (store 9 digits for each int)
 		intArr = new int[MAX_SIZE];
 		int num;
 		for(int i = 0; i <= this.len/UPPERBOUND_LEN; i++)
@@ -40,9 +36,12 @@ public class LongInt {
 				num = Integer.valueOf(num_str.substring(this.len - (i+1)*UPPERBOUND_LEN, 
                                                             this.len - i*UPPERBOUND_LEN));
 			}
-			catch(IndexOutOfBoundsException e) // for leftover digits at the front
+			catch(IndexOutOfBoundsException e) // leftover digits at the front
 			{
-				num = Integer.valueOf(num_str.substring(0, this.len - i*UPPERBOUND_LEN));
+				if (this.len % UPPERBOUND_LEN != 0)
+					num = Integer.valueOf(num_str.substring(0, this.len - i*UPPERBOUND_LEN));
+				else
+					num = 0;
 			}
 			
 			intArr[intArr.length - (i+1)] = num;
