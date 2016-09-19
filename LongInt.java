@@ -106,7 +106,7 @@ public class LongInt {
 	public LongInt multiply(LongInt opnd) 
 	{
 		int[] resultArr = new int[MAX_SIZE];
-		int[] tempArr = new int[MAX_SIZE];
+		LongInt resultLong = new LongInt(resultArr, "");
 		String resultSign;
 		
 		if (this.sign.equals(opnd.getSign()))
@@ -118,14 +118,17 @@ public class LongInt {
 		{
 			for (int k = 0; k < MAX_SIZE; k++)
 			{
-				// FIXME
+				int[] tmpArr = new int[MAX_SIZE];
 				int multiplied = this.intArr[MAX_SIZE - (i+1)] * opnd.getArray()[MAX_SIZE - (k+1)];
-				resultArr[MAX_SIZE - (i+k+1)] += multiplied % UPPERBOUND;
+				tmpArr[MAX_SIZE - (i+k+1)] += multiplied % UPPERBOUND;
 				if (MAX_SIZE - (i+k+2) != 0)
-					resultArr[MAX_SIZE - (i+k+2)] += multiplied / UPPERBOUND;
+					tmpArr[MAX_SIZE - (i+k+2)] += multiplied / UPPERBOUND;
+				
+				LongInt tmpLong = new LongInt(tmpArr, "");
+				resultLong = resultLong.add(tmpLong);
 			}
 		}
-		return new LongInt(resultArr, resultSign);
+		return new LongInt(resultLong.getArray(), resultSign);
 	}
 
 	// print the value of 'this' element to the standard output.
@@ -166,27 +169,6 @@ public class LongInt {
 		for(int i = MAX_SIZE-1; i >= 0; i--)
 		{
 			int added = this.intArr[i] + opnd.getArray()[i];
-			resultArr[i] += added % UPPERBOUND;
-			
-			if (i != 0)
-				resultArr[i-1] += added / UPPERBOUND;
-		}
-		return resultArr;
-	}
-	
-	private int[] addArrays(int[] arr1, int[] arr2)
-	{
-		int[] resultArr = new int[MAX_SIZE];
-		// validity check
-		if (arr1.length != MAX_SIZE || arr2.length != MAX_SIZE)
-		{
-			System.out.println("Error: both arrays must be size " + MAX_SIZE);
-			return resultArr;
-		}
-		
-		for(int i = MAX_SIZE-1; i >= 0; i--)
-		{
-			int added = arr1[i] + arr2[i];
 			resultArr[i] += added % UPPERBOUND;
 			
 			if (i != 0)
