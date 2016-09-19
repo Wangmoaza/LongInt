@@ -12,35 +12,34 @@ public class LongInt {
 	
 	private String sign; // empty string for positive sign
 	private int[] intArr;
-	private int len;
 	
 	// constructor
 	public LongInt(String s) 
 	{
 		Matcher matcher = EXPRESSION_PATTERN.matcher(s);
 		String num_str = "";
+		int len = 0;
 		
 		if (matcher.find())
 		{
 			this.sign = matcher.group("sign");
 			num_str = matcher.group("num");
-			this.len = num_str.length(); // set len
+			len = num_str.length(); // set len
 		}
 		
 		// convert to int array (store 9 digits for each int)
 		intArr = new int[MAX_SIZE];
 		int num;
-		for(int i = 0; i <= this.len/UPPERBOUND_LEN; i++)
+		for(int i = 0; i <= len/UPPERBOUND_LEN; i++)
 		{
 			try
 			{
-				num = Integer.valueOf(num_str.substring(this.len - (i+1)*UPPERBOUND_LEN, 
-                                                        this.len - i*UPPERBOUND_LEN));
+				num = Integer.valueOf(num_str.substring(len - (i+1)*UPPERBOUND_LEN, len - i*UPPERBOUND_LEN));
 			}
 			catch(IndexOutOfBoundsException e) // leftover digits at the front
 			{
-				if (this.len % UPPERBOUND_LEN != 0)
-					num = Integer.valueOf(num_str.substring(0, this.len - i*UPPERBOUND_LEN));
+				if (len % UPPERBOUND_LEN != 0)
+					num = Integer.valueOf(num_str.substring(0, len - i*UPPERBOUND_LEN));
 				else
 					num = 0;
 			}
@@ -53,7 +52,6 @@ public class LongInt {
 	{
 		this.intArr = numArr;
 		this.sign = sign;
-		//FIXME set len
 	}
 
 	// returns 'this' + 'opnd'; Both inputs remain intact.
@@ -107,9 +105,26 @@ public class LongInt {
 	// returns 'this' * 'opnd'; Both inputs remain intact.
 	public LongInt multiply(LongInt opnd) 
 	{
-		//FIXME
 		int[] resultArr = new int[MAX_SIZE];
-		String resultSign = "";
+		int[] tempArr = new int[MAX_SIZE];
+		String resultSign;
+		
+		if (this.sign.equals(opnd.getSign()))
+			resultSign = "";
+		else
+			resultSign = "-";
+		
+		for (int i = 0; i < MAX_SIZE; i++)
+		{
+			for (int k = 0; k < MAX_SIZE; k++)
+			{
+				// FIXME
+				int multiplied = this.intArr[MAX_SIZE - (i+1)] * opnd.getArray()[MAX_SIZE - (k+1)];
+				resultArr[MAX_SIZE - (i+k+1)] += multiplied % UPPERBOUND;
+				if (MAX_SIZE - (i+k+2) != 0)
+					resultArr[MAX_SIZE - (i+k+2)] += multiplied / UPPERBOUND;
+			}
+		}
 		return new LongInt(resultArr, resultSign);
 	}
 
@@ -151,6 +166,27 @@ public class LongInt {
 		for(int i = MAX_SIZE-1; i >= 0; i--)
 		{
 			int added = this.intArr[i] + opnd.getArray()[i];
+			resultArr[i] += added % UPPERBOUND;
+			
+			if (i != 0)
+				resultArr[i-1] += added / UPPERBOUND;
+		}
+		return resultArr;
+	}
+	
+	private int[] addArrays(int[] arr1, int[] arr2)
+	{
+		int[] resultArr = new int[MAX_SIZE];
+		// validity check
+		if (arr1.length != MAX_SIZE || arr2.length != MAX_SIZE)
+		{
+			System.out.println("Error: both arrays must be size " + MAX_SIZE);
+			return resultArr;
+		}
+		
+		for(int i = MAX_SIZE-1; i >= 0; i--)
+		{
+			int added = arr1[i] + arr2[i];
 			resultArr[i] += added % UPPERBOUND;
 			
 			if (i != 0)
