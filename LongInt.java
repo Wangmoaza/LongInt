@@ -46,6 +46,13 @@ public class LongInt {
 			
 			intArr[intArr.length - (i+1)] = num;
 		}
+		
+		//FIXME
+		System.out.println("sign: " + this.sign);
+		
+		for(int i = 0; i <MAX_SIZE; i++)
+			System.out.print(intArr[i] + " ");
+		System.out.println();
 	}
 	
 	public LongInt(int[] numArr, String sign)
@@ -86,10 +93,10 @@ public class LongInt {
 		
 		if (this.sign.equals(opnd.getSign()))
 		{
-			if (!isSmallerAbsolute(opnd))
+			if (!isSmallerAbsolute(opnd)) // this is bigger or equal than opnd absolutely
 				resultSign = this.sign;
 			else
-				resultSign = opnd.getSign();
+				resultSign = getOppositeSign(this.sign);
 			
 			resultArr = subtractArrays(opnd);
 		}
@@ -114,14 +121,15 @@ public class LongInt {
 		else
 			resultSign = "-";
 		
-		for (int i = 0; i < MAX_SIZE; i++)
+		for (int i = 0; i < MAX_SIZE/2; i++)
 		{
-			for (int k = 0; k < MAX_SIZE; k++)
+			for (int k = 0; k < MAX_SIZE/2; k++)
 			{
+				//FIXME array index out of bounds
 				int[] tmpArr = new int[MAX_SIZE];
 				int multiplied = this.intArr[MAX_SIZE - (i+1)] * opnd.getArray()[MAX_SIZE - (k+1)];
 				tmpArr[MAX_SIZE - (i+k+1)] += multiplied % UPPERBOUND;
-				if (MAX_SIZE - (i+k+2) != 0)
+				if (MAX_SIZE - (i+k+2) >= 0)
 					tmpArr[MAX_SIZE - (i+k+2)] += multiplied / UPPERBOUND;
 				
 				LongInt tmpLong = new LongInt(tmpArr, "");
@@ -132,7 +140,20 @@ public class LongInt {
 	}
 
 	// print the value of 'this' element to the standard output.
-	public void print() {}
+	public void print() 
+	{
+		//TODO
+		String outputStr = this.sign;
+		for(int i = 0; i < MAX_SIZE; i++)
+		{
+			if (this.intArr[i] == 0 && i != MAX_SIZE-1)
+				continue;
+			
+			outputStr += Integer.toString(this.intArr[i]);
+		}
+		
+		System.out.print(outputStr);
+	}
 
 	public String getSign()
 	{
@@ -171,7 +192,7 @@ public class LongInt {
 			int added = this.intArr[i] + opnd.getArray()[i];
 			resultArr[i] += added % UPPERBOUND;
 			
-			if (i != 0)
+			if (i > 0)
 				resultArr[i-1] += added / UPPERBOUND;
 		}
 		return resultArr;
@@ -184,7 +205,7 @@ public class LongInt {
 		int[] bigArr;
 		int[] smallArr;
 		
-		if (isSmallerAbsolute(opnd))
+		if (!isSmallerAbsolute(opnd))
 		{
 			bigArr = this.intArr;
 			smallArr = opnd.getArray();
@@ -211,5 +232,13 @@ public class LongInt {
 		}
 		
 		return resultArr;
+	}
+	
+	private String getOppositeSign(String sign)
+	{
+		if (sign.equals(""))
+			return "-";
+		else
+			return "";
 	}
 }
