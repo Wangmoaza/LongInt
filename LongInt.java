@@ -6,7 +6,7 @@ import java.lang.Integer;
 public class LongInt {
 
 	public static final int MAX_SIZE = 50;
-	public static final int UPPERBOUND = 100000000; // exclusive
+	public static final int UPPERBOUND = 1000000000; // exclusive
 	public static final int UPPERBOUND_LEN = 9;
 	public static final Pattern EXPRESSION_PATTERN = Pattern.compile("(?<sign>[[+][-]]?)(?<num>[0-9]+)");
 	
@@ -125,7 +125,6 @@ public class LongInt {
 		{
 			for (int k = 0; k < MAX_SIZE/2; k++)
 			{
-				//FIXME array index out of bounds
 				int[] tmpArr = new int[MAX_SIZE];
 				int multiplied = this.intArr[MAX_SIZE - (i+1)] * opnd.getArray()[MAX_SIZE - (k+1)];
 				tmpArr[MAX_SIZE - (i+k+1)] += multiplied % UPPERBOUND;
@@ -142,16 +141,23 @@ public class LongInt {
 	// print the value of 'this' element to the standard output.
 	public void print() 
 	{
-		//TODO
 		String outputStr = this.sign;
+		boolean startFlag = false;
 		for(int i = 0; i < MAX_SIZE; i++)
 		{
-			if (this.intArr[i] == 0 && i != MAX_SIZE-1)
+			if (this.intArr[i] == 0 && !startFlag)
 				continue;
-			
-			outputStr += Integer.toString(this.intArr[i]);
-		}
-		
+			else if (!startFlag) // first appearing nonzero digit
+			{
+				startFlag = true;
+				outputStr += Integer.toString(this.intArr[i]);
+			}
+			else
+			{
+				startFlag = true;
+				outputStr += leadingZeros(this.intArr[i]) + Integer.toString(this.intArr[i]);
+			}
+		}	
 		System.out.print(outputStr);
 	}
 
@@ -189,9 +195,8 @@ public class LongInt {
 		
 		for(int i = MAX_SIZE-1; i >= 0; i--)
 		{
-			int added = this.intArr[i] + opnd.getArray()[i];
-			resultArr[i] += added % UPPERBOUND;
-			
+			int added = resultArr[i] + this.intArr[i] + opnd.getArray()[i];
+			resultArr[i] = added % UPPERBOUND;
 			if (i > 0)
 				resultArr[i-1] += added / UPPERBOUND;
 		}
@@ -240,5 +245,21 @@ public class LongInt {
 			return "-";
 		else
 			return "";
+	}
+	
+	private String leadingZeros(int num)
+	{
+		int cnt = 1;
+		while (num / 10 != 0)
+		{
+			num = num / 10;
+			cnt++;
+		}
+		
+		String zeros = "";
+		for(int i = 0; i < UPPERBOUND_LEN - cnt; i++)
+			zeros += "0";
+		
+		return zeros;
 	}
 }
