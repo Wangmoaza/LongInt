@@ -6,8 +6,8 @@ import java.lang.Integer;
 public class LongInt {
 
 	public static final int MAX_SIZE = 50;
-	public static final int UPPERBOUND = 1000000000; // exclusive
-	public static final int UPPERBOUND_LEN = 9;
+	public static final int UPPERBOUND = 10000; // exclusive
+	public static final int UPPERBOUND_LEN = 4;
 	public static final Pattern EXPRESSION_PATTERN = Pattern.compile("(?<sign>[[+][-]]?)(?<num>[0-9]+)");
 	
 	private String sign; // empty string for positive sign
@@ -126,11 +126,13 @@ public class LongInt {
 			for (int k = 0; k < MAX_SIZE/2; k++)
 			{
 				int[] tmpArr = new int[MAX_SIZE];
-				int multiplied = this.intArr[MAX_SIZE - (i+1)] * opnd.getArray()[MAX_SIZE - (k+1)];
-				tmpArr[MAX_SIZE - (i+k+1)] += multiplied % UPPERBOUND;
+				int val = this.intArr[MAX_SIZE - (i+1)] * opnd.getArray()[MAX_SIZE - (k+1)] 
+						  + tmpArr[MAX_SIZE - (i+k+1)];
+				tmpArr[MAX_SIZE - (i+k+1)] = val % UPPERBOUND;
 				if (MAX_SIZE - (i+k+2) >= 0)
-					tmpArr[MAX_SIZE - (i+k+2)] += multiplied / UPPERBOUND;
+					tmpArr[MAX_SIZE - (i+k+2)] += val / UPPERBOUND;
 				
+				System.out.println();
 				LongInt tmpLong = new LongInt(tmpArr, "");
 				resultLong = resultLong.add(tmpLong);
 			}
