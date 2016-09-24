@@ -5,13 +5,14 @@ import java.lang.Integer;
 
 public class LongInt {
 
-	public static final int MAX_SIZE = 50;
+	public static final int MAX_SIZE = 500;
 	public static final int UPPERBOUND = 10000; // exclusive
 	public static final int UPPERBOUND_LEN = 4;
 	public static final Pattern EXPRESSION_PATTERN = Pattern.compile("(?<sign>[[+][-]]?)(?<num>[0-9]+)");
 	
 	private String sign; // empty string for positive sign
 	private int[] intArr;
+	private int startIndex;
 	
 	// constructor
 	public LongInt(String s) 
@@ -46,19 +47,14 @@ public class LongInt {
 			
 			intArr[intArr.length - (i+1)] = num;
 		}
-		
-		//FIXME
-		System.out.println("sign: " + this.sign);
-		
-		for(int i = 0; i <MAX_SIZE; i++)
-			System.out.print(intArr[i] + " ");
-		System.out.println();
+		startIndex = setStartIndex(intArr);
 	}
 	
 	public LongInt(int[] numArr, String sign)
 	{
 		this.intArr = numArr;
 		this.sign = sign;
+		this.startIndex = setStartIndex(this.intArr);
 	}
 
 	// returns 'this' + 'opnd'; Both inputs remain intact.
@@ -116,6 +112,13 @@ public class LongInt {
 		LongInt resultLong = new LongInt(resultArr, "");
 		String resultSign;
 		
+		// when either is 0
+		if (this.startIndex == MAX_SIZE - 1 || opnd.getStartIndex() == MAX_SIZE - 1)
+		{
+			if (this.intArr[MAX_SIZE-1] == 0 || opnd.getArray()[MAX_SIZE-1] == 0)
+				return resultLong;
+		}
+		
 		if (this.sign.equals(opnd.getSign()))
 			resultSign = "";
 		else
@@ -132,7 +135,6 @@ public class LongInt {
 				if (MAX_SIZE - (i+k+2) >= 0)
 					tmpArr[MAX_SIZE - (i+k+2)] += val / UPPERBOUND;
 				
-				System.out.println();
 				LongInt tmpLong = new LongInt(tmpArr, "");
 				resultLong = resultLong.add(tmpLong);
 			}
@@ -144,21 +146,10 @@ public class LongInt {
 	public void print() 
 	{
 		String outputStr = this.sign;
-		boolean startFlag = false;
-		for(int i = 0; i < MAX_SIZE; i++)
+		outputStr += Integer.toString(this.intArr[this.startIndex]);
+		for(int i = this.startIndex+1; i < MAX_SIZE; i++)
 		{
-			if (this.intArr[i] == 0 && !startFlag)
-				continue;
-			else if (!startFlag) // first appearing nonzero digit
-			{
-				startFlag = true;
-				outputStr += Integer.toString(this.intArr[i]);
-			}
-			else
-			{
-				startFlag = true;
-				outputStr += leadingZeros(this.intArr[i]) + Integer.toString(this.intArr[i]);
-			}
+			outputStr += leadingZeros(this.intArr[i]) + Integer.toString(this.intArr[i]);
 		}	
 		System.out.print(outputStr);
 	}
@@ -171,6 +162,11 @@ public class LongInt {
 	public int[] getArray()
 	{
 		return this.intArr;
+	}
+	
+	public int getStartIndex()
+	{
+		return this.startIndex;
 	}
 	
 	// if this is absolutely smaller that opnd return true, otherwise return false
@@ -212,7 +208,8 @@ public class LongInt {
 		int[] bigArr;
 		int[] smallArr;
 		
-		if (!isSmallerAbsolute(opnd))
+		// determine big and small array
+		if (!isSmallerAbsolute(opnd)) // this is bigger or equal than opnd
 		{
 			bigArr = this.intArr;
 			smallArr = opnd.getArray();
@@ -229,15 +226,13 @@ public class LongInt {
 			if (subtracted < 0)
 			{
 				resultArr[i] += UPPERBOUND + subtracted;
-				if (i != 0)
+				if (i > 0)
 					resultArr[i-1] -= 1;
 			}
 			else
-			{
 				resultArr[i] += subtracted;
-			}
 		}
-		
+		convertMinusOne(resultArr);
 		return resultArr;
 	}
 	
@@ -249,6 +244,7 @@ public class LongInt {
 			return "";
 	}
 	
+	// return leading zeros need for cipher match
 	private String leadingZeros(int num)
 	{
 		int cnt = 1;
@@ -263,5 +259,29 @@ public class LongInt {
 			zeros += "0";
 		
 		return zeros;
+	}
+	
+	private void convertMinusOne(int[] arr)
+	{
+		for(int i = MAX_SIZE - 1; i > 0; i--)
+		{
+			if (arr[i] < 0)
+			{
+				arr[i] = UPPERBOUND - 1;
+				arr[i-1] -= 1;
+			}
+		}
+	}
+	
+	private int setStartIndex(int[] arr)
+	{
+		for(int i = 0; i <MAX_SIZE; i++)
+		{
+ 			if (arr[i] == 0)
+ 				continue;
+ 			else
+ 				return i;
+		}
+		return MAX_SIZE-1;
 	}
 }
