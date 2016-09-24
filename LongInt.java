@@ -5,14 +5,12 @@ import java.lang.Integer;
 
 public class LongInt {
 
-	public static final int MAX_SIZE = 500;
 	public static final int UPPERBOUND = 10000; // exclusive
 	public static final int UPPERBOUND_LEN = 4;
 	public static final Pattern EXPRESSION_PATTERN = Pattern.compile("(?<sign>[[+][-]]?)(?<num>[0-9]+)");
 	
 	private String sign; // empty string for positive sign
 	private int[] intArr;
-	private int startIndex;
 	
 	// constructor
 	public LongInt(String s) 
@@ -29,7 +27,7 @@ public class LongInt {
 		}
 		
 		// convert to int array (store 9 digits for each int)
-		intArr = new int[MAX_SIZE];
+		intArr = new int[len/UPPERBOUND_LEN + 1];
 		int num;
 		for(int i = 0; i <= len/UPPERBOUND_LEN; i++)
 		{
@@ -47,14 +45,13 @@ public class LongInt {
 			
 			intArr[intArr.length - (i+1)] = num;
 		}
-		startIndex = setStartIndex(intArr);
+		this.intArr = removeFrontZeros(intArr);
 	}
 	
 	public LongInt(int[] numArr, String sign)
 	{
-		this.intArr = numArr;
+		this.intArr = removeFrontZeros(numArr);
 		this.sign = sign;
-		this.startIndex = setStartIndex(this.intArr);
 	}
 
 	// returns 'this' + 'opnd'; Both inputs remain intact.
@@ -108,32 +105,33 @@ public class LongInt {
 	// returns 'this' * 'opnd'; Both inputs remain intact.
 	public LongInt multiply(LongInt opnd) 
 	{
-		int[] resultArr = new int[MAX_SIZE];
-		LongInt resultLong = new LongInt(resultArr, "");
+		// when either is 0, answer is 0
+		if (this.intArr.length == 1 && this.intArr[0] == 0)
+			return new LongInt(new int[1], "");
+		else if (opnd.getArray().length == 1 && this.intArr[0] == 0)
+			return new LongInt(new int[1], "");
+		
 		String resultSign;
-		
-		// when either is 0
-		if (this.startIndex == MAX_SIZE - 1 || opnd.getStartIndex() == MAX_SIZE - 1)
-		{
-			if (this.intArr[MAX_SIZE-1] == 0 || opnd.getArray()[MAX_SIZE-1] == 0)
-				return resultLong;
-		}
-		
 		if (this.sign.equals(opnd.getSign()))
 			resultSign = "";
 		else
 			resultSign = "-";
 		
-		for (int i = 0; i < MAX_SIZE/2; i++)
+		int thisLen = this.intArr.length;
+		int opndLen = opnd.getArray().length;
+		int tmpLen = thisLen + opndLen + 1;
+		LongInt resultLong = new LongInt(new int[tmpLen], "");
+		
+		for (int i = 0; i < thisLen; i++)
 		{
-			for (int k = 0; k < MAX_SIZE/2; k++)
+			for (int k = 0; k < opndLen; k++)
 			{
-				int[] tmpArr = new int[MAX_SIZE];
-				int val = this.intArr[MAX_SIZE - (i+1)] * opnd.getArray()[MAX_SIZE - (k+1)] 
-						  + tmpArr[MAX_SIZE - (i+k+1)];
-				tmpArr[MAX_SIZE - (i+k+1)] = val % UPPERBOUND;
-				if (MAX_SIZE - (i+k+2) >= 0)
-					tmpArr[MAX_SIZE - (i+k+2)] += val / UPPERBOUND;
+				int[] tmpArr = new int[tmpLen];
+				int val = this.intArr[thisLen - (i+1)] * opnd.getArray()[opndLen - (k+1)] 
+						  + tmpArr[tmpLen - (i+k+1)];
+				tmpArr[tmpLen - (i+k+1)] = val % UPPERBOUND;
+				if (tmpLen - (i+k+2) >= 0)
+					tmpArr[tmpLen - (i+k+2)] += val / UPPERBOUND;
 				
 				LongInt tmpLong = new LongInt(tmpArr, "");
 				resultLong = resultLong.add(tmpLong);
@@ -146,11 +144,10 @@ public class LongInt {
 	public void print() 
 	{
 		String outputStr = this.sign;
-		outputStr += Integer.toString(this.intArr[this.startIndex]);
-		for(int i = this.startIndex+1; i < MAX_SIZE; i++)
-		{
+		outputStr += Integer.toString(this.intArr[0]);
+		for(int i = 1; i < this.intArr.length; i++)
 			outputStr += leadingZeros(this.intArr[i]) + Integer.toString(this.intArr[i]);
-		}	
+		
 		System.out.print(outputStr);
 	}
 
@@ -164,47 +161,28 @@ public class LongInt {
 		return this.intArr;
 	}
 	
-	public int getStartIndex()
-	{
-		return this.startIndex;
-	}
-	
-	// if this is absolutely smaller that opnd return true, otherwise return false
+	// if this is smaller that opnd return true in absolute number, otherwise return false
 	private boolean isSmallerAbsolute(LongInt opnd)
 	{
-		boolean smallerFlag = false;
-		for(int i = 0; i < MAX_SIZE; i++)
+		if (this.intArr.length > opnd.getArray().length)
+			return false;
+		else if (this.intArr.length < opnd.getArray().length)
+			return true;
+		
+		// compare each digit
+		for (int i = 0; i < this.intArr.length; i++)
 		{
-			if (this.intArr[i] < opnd.getArray()[i])
-			{
-				smallerFlag = true;
-				break;
-			}
-			else if (this.intArr[i] > opnd.getArray()[i])
-				break;
+			if (this.intArr[i] > opnd.getArray()[i])
+				return false;
+			else if (this.intArr[i] < opnd.getArray()[i])
+				return true;
 		}
-		return smallerFlag;
+		return false;
 	}
 	
 	// internal method for adding two arrays
 	private int[] addArrays(LongInt opnd)
 	{
-		int[] resultArr = new int[MAX_SIZE];
-		
-		for(int i = MAX_SIZE-1; i >= 0; i--)
-		{
-			int added = resultArr[i] + this.intArr[i] + opnd.getArray()[i];
-			resultArr[i] = added % UPPERBOUND;
-			if (i > 0)
-				resultArr[i-1] += added / UPPERBOUND;
-		}
-		return resultArr;
-	}
-	
-	// internal method for subtracting two arrays (big - small)
-	private int[] subtractArrays(LongInt opnd)
-	{
-		int[] resultArr = new int[MAX_SIZE];
 		int[] bigArr;
 		int[] smallArr;
 		
@@ -220,18 +198,60 @@ public class LongInt {
 			smallArr = this.intArr;
 		}
 		
-		for(int i = MAX_SIZE-1; i >= 0; i--)
+		int[] resultArr = new int[bigArr.length + 1];
+		
+		for(int i = 0; i < smallArr.length; i++)
 		{
-			int subtracted = bigArr[i] - smallArr[i];
+			int added = resultArr[resultArr.length - (i+1)] + bigArr[bigArr.length - (i+1)] 
+					    + smallArr[smallArr.length - (i+1)];
+			resultArr[resultArr.length - (i+1)] = added % UPPERBOUND;
+			resultArr[resultArr.length - (i+2)] += added / UPPERBOUND;
+		}
+		
+		for (int k = smallArr.length; k < bigArr.length; k++)
+		{
+			int val = resultArr[resultArr.length - (k+1)] + bigArr[bigArr.length - (k+1)];
+			resultArr[resultArr.length - (k+1)] = val % UPPERBOUND;
+			resultArr[resultArr.length - (k+2)] = val / UPPERBOUND;
+		}
+		return resultArr;
+	}
+	
+	// internal method for subtracting two arrays (big - small)
+	private int[] subtractArrays(LongInt opnd)
+	{
+		int[] bigArr;
+		int[] smallArr;
+		
+		// determine big and small array
+		if (!isSmallerAbsolute(opnd)) // this is bigger or equal than opnd
+		{
+			bigArr = this.intArr;
+			smallArr = opnd.getArray();
+		}
+		else
+		{
+			bigArr = opnd.getArray();
+			smallArr = this.intArr;
+		}
+		
+		int[] resultArr = new int[bigArr.length];
+		
+		for(int i = 0; i < smallArr.length; i++)
+		{
+			int subtracted = bigArr[bigArr.length - (i+1)] - smallArr[smallArr.length - (i+1)];
 			if (subtracted < 0)
 			{
-				resultArr[i] += UPPERBOUND + subtracted;
-				if (i > 0)
-					resultArr[i-1] -= 1;
+				resultArr[resultArr.length - (i+1)] += UPPERBOUND + subtracted;
+				resultArr[resultArr.length - (i+2)] -= 1;
 			}
 			else
-				resultArr[i] += subtracted;
+				resultArr[resultArr.length - (i+1)] += subtracted;
 		}
+		
+		for (int k = smallArr.length; k < bigArr.length; k++)
+			resultArr[resultArr.length - (k+1)] += bigArr[bigArr.length - (k+1)];
+		
 		convertMinusOne(resultArr);
 		return resultArr;
 	}
@@ -261,9 +281,10 @@ public class LongInt {
 		return zeros;
 	}
 	
+	// convert -1 in the array to appropriate number
 	private void convertMinusOne(int[] arr)
 	{
-		for(int i = MAX_SIZE - 1; i > 0; i--)
+		for(int i = arr.length - 1; i > 0; i--)
 		{
 			if (arr[i] < 0)
 			{
@@ -273,15 +294,21 @@ public class LongInt {
 		}
 	}
 	
-	private int setStartIndex(int[] arr)
+	// return array that has no front zeros
+	private int[] removeFrontZeros(int[] arr)
 	{
-		for(int i = 0; i <MAX_SIZE; i++)
+		int start = 0;
+		for(int i = 0; i <arr.length - 1; i++)
 		{
- 			if (arr[i] == 0)
- 				continue;
- 			else
- 				return i;
+ 			if (arr[i] == 0) start++;
+ 			else break;
 		}
-		return MAX_SIZE-1;
+
+		// copy arr to retArr
+		int[] retArr = new int[arr.length - start];
+		for (int k = 0; k < retArr.length; k++)
+			retArr[k] = arr[k + start];
+		
+		return retArr;
 	}
 }
