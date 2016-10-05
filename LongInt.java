@@ -1,3 +1,9 @@
+/**
+ * @author Ha-Eun Hwangbo
+ * Sep 24, 2016
+ * JDK version 1.7
+ */
+
 // LongInt ADT for unbounded integers
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
